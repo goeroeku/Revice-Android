@@ -1,24 +1,20 @@
 package com.linkensky.revice.activity;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -26,17 +22,6 @@ import android.view.MenuItem;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.linkensky.revice.RevicePreferences;
 import com.linkensky.revice.fragments.HistoryFragment;
 import com.linkensky.revice.fragments.OrderFragment;
@@ -46,31 +31,19 @@ import com.linkensky.revice.R;
 import com.linkensky.revice.adapters.ViewPagerAdapter;
 import com.linkensky.revice.realm.CurrentUserModel;
 
-import java.text.DateFormat;
-import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends LocationActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = "MainActivity";
 
 
     private BroadcastReceiver mRegistrationBroadcastReceiver;
-    private SharedPreferences sharedPreferences;
 
-    private ViewPagerAdapter viewPagerAdapter;
-    private GoogleApiClient mGoogleApiClient;
-    private boolean mRequestingLocationUpdates = true;
-    private LocationRequest mLocationRequest;
-    private Location mCurrentLocation;
-    private String mLastUpdateTime;
-    private CurrentUserModel currentUser;
-    private boolean isLogin = false;;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,14 +51,18 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        ActionBar actionBar = getSupportActionBar();
+        if(actionBar != null){
+           actionBar.setDisplayShowTitleEnabled(false);
+        }
+
+
 
         Boolean isPlayService = checkPlayServices();
 
-        sharedPreferences =
-                PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        isLogin = sharedPreferences.getBoolean(RevicePreferences.IS_LOGGED_IN, false);
+        boolean isLogin = sharedPreferences.getBoolean(RevicePreferences.IS_LOGGED_IN, false);
 
 //        Set Up Drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -106,7 +83,7 @@ public class MainActivity extends AppCompatActivity
             RealmResults<CurrentUserModel> currentUserResult = realm.where(CurrentUserModel.class).findAll();
 
             if(currentUserResult.size() != 0){
-                currentUser = currentUserResult.first();
+                CurrentUserModel currentUser = currentUserResult.first();
                 String role = currentUser.getRoleName();
                 if(role.equals("admin") || role.equals("pemilik")){
                     menu.findItem(R.id.nav_jobs).setVisible(true);
@@ -129,8 +106,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                boolean sentToken = sharedPreferences
-                        .getBoolean(RevicePreferences.SENT_TOKEN_TO_SERVER, false);
+//                boolean sentToken = sharedPreferences
+//                        .getBoolean(RevicePreferences.SENT_TOKEN_TO_SERVER, false);
 
             }
         };
@@ -141,29 +118,11 @@ public class MainActivity extends AppCompatActivity
             startService(intent);
         }
 
-        //Get All Map Data
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
+
 
 
     }
 
-    @Override
-    protected void onStart() {
-        mGoogleApiClient.connect();
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        mGoogleApiClient.disconnect();
-        super.onStop();
-    }
 
     @Override
     public void onBackPressed() {
@@ -244,12 +203,23 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
     private void setupTabIcons(TabLayout tabLayout) {
-        tabLayout.getTabAt(0).setIcon(R.drawable.ic_near_me_white_24dp);
-        tabLayout.getTabAt(1).setIcon(R.drawable.ic_contacts_white_24dp);
-        tabLayout.getTabAt(2).setIcon(R.drawable.ic_history_white_24dp);
+
+
+        TabLayout.Tab tab;
+
+        if((tab = tabLayout.getTabAt(0))!= null){
+            tab.setIcon(R.drawable.ic_near_me_white_24dp);
+        }
+        if((tab = tabLayout.getTabAt(1))!= null){
+            tab.setIcon(R.drawable.ic_contacts_white_24dp);
+        }
+        if((tab = tabLayout.getTabAt(2))!= null){
+            tab.setIcon(R.drawable.ic_history_white_24dp);
+        }
+
     }
     private void setupViewPager(ViewPager viewPager) {
-        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
         viewPagerAdapter.addFragment(new HomeFragment(), "Sekitar");
         viewPagerAdapter.addFragment(new OrderFragment(), "Pemesanan");
         viewPagerAdapter.addFragment(new HistoryFragment(), "Riwayat");
@@ -277,92 +247,5 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
 
-    protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest,this);
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        createLocationRequest();
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
-                        builder.build());
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(LocationSettingsResult locationSettingsResult) {
-                final Status status = locationSettingsResult.getStatus();
-                final LocationSettingsStates state = locationSettingsResult.getLocationSettingsStates();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
-                            Log.e("Wow", "Need Resolution");
-
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        break;
-                }
-            }
-        });
-
-        if (mRequestingLocationUpdates) {
-            startLocationUpdates();
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-
-    }
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-
-        HomeFragment homeFragment = (HomeFragment) viewPagerAdapter.getItem(0);
-        homeFragment.updateMarker(location);
-
-        OrderFragment orderFragment = (OrderFragment) viewPagerAdapter.getItem(1);
-        orderFragment.updateMarker(location);
-    }
 }

@@ -19,6 +19,9 @@ public class UserItem {
     @SerializedName("email")
     @Expose
     private String email;
+    @SerializedName("password")
+    @Expose
+    private String password;
     @SerializedName("alamat")
     @Expose
     private String alamat;
@@ -40,6 +43,22 @@ public class UserItem {
     @SerializedName("managed_service")
     @Expose
     private List<ServiceItem> managedService = new ArrayList<ServiceItem>();
+
+    public UserItem(String nama, String email, String password, String alamat, String telp) {
+        this.nama = nama;
+        this.email = email;
+        this.password = password;
+        this.alamat = alamat;
+        this.telp = telp;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     /**
      *

@@ -1,6 +1,7 @@
 package com.linkensky.revice.activity;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -48,6 +49,7 @@ public class JobDetailActivity extends AppCompatActivity implements OnMapReadyCa
     private LatLng pos;
     private GoogleMap mMap;
     private OrderItem item;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +57,68 @@ public class JobDetailActivity extends AppCompatActivity implements OnMapReadyCa
         setContentView(R.layout.activity_job_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        final ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class,
+                sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""), this);
+
+        String id = getIntent().getStringExtra("orderId");
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+
+        LoadData(reviceApi, id);
+
+        Button bTerima = (Button) findViewById(R.id.bTerima);
+        bTerima.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressDialog.setMessage("Memproses...");
+                progressDialog.show();
+                ServiceModel service = currentUser.getService().first();
+                Call<Order> orderStatus = reviceApi.editStatus(item.getId(),new StatusRequest(1, service.getId()));
+                orderStatus.enqueue(new Callback<Order>() {
+                    @Override
+                    public void onResponse(Call<Order> call, Response<Order> response) {
+                        if (response.isSuccess()) {
+                            progressDialog.hide();
+                            ShowDialog("Sukses!", "Job Di Terima");
+                        } else {
+                            progressDialog.hide();
+                            ShowDialog("Error!", "Gagal Menerima Job, Error: EJD04");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Order> call, Throwable t) {
+                        progressDialog.hide();
+                        ShowDialog("Error!", "Gagal Menerima Job,Error: EJD05");
+                    }
+                });
+            }
+        });
+        Button bPanggil = (Button) findViewById(R.id.bPanggil);
+        bPanggil.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                callIntent.setData(Uri.parse("tel:" + item.getUserData().getTelp()));
+                startActivity(callIntent);
+            }
+        });
+
+
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapJob);
+        mapFragment.getMapAsync(this);
+
+    }
+
+    private void LoadData(ReviceApi reviceApi, String id) {
         realm = Realm.getInstance(this);
+
         currentUser = realm.where(CurrentUserModel.class).findFirst();
 
         final TextView idPesan = (TextView) findViewById(R.id.tvIdPesan);
@@ -69,10 +131,8 @@ public class JobDetailActivity extends AppCompatActivity implements OnMapReadyCa
         final TextView alamat = (TextView) findViewById(R.id.tvAlamat);
         final TextView telp = (TextView) findViewById(R.id.tvTelp);
 
-
-        String id = getIntent().getStringExtra("orderId");
-        final ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class,
-                sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""));
+        progressDialog.setMessage("Mengambil Data");
+        progressDialog.show();
         final Call<Order> orderCall = reviceApi.getOrder(id);
         orderCall.enqueue(new Callback<Order>() {
             @Override
@@ -115,57 +175,22 @@ public class JobDetailActivity extends AppCompatActivity implements OnMapReadyCa
                         mMap.animateCamera(center);
                     }
 
+                    progressDialog.dismiss();
+
                 } else {
+                    progressDialog.dismiss();
                     ShowDialog("Error!", "Gagal Mengambil Data, Error: EJD01");
                 }
             }
 
             @Override
             public void onFailure(Call<Order> call, Throwable t) {
+                progressDialog.dismiss();
                 ShowDialog("Error!", "Gagal Mengambil Data, Error: EJD02");
             }
         });
-
-        Button bTerima = (Button) findViewById(R.id.bTerima);
-        bTerima.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ServiceModel service = currentUser.getService().first();
-                Call<Order> orderStatus = reviceApi.editStatus(idPesan.getText().toString(),new StatusRequest(1, service.getId()));
-                orderStatus.enqueue(new Callback<Order>() {
-                    @Override
-                    public void onResponse(Call<Order> call, Response<Order> response) {
-                        if (response.isSuccess()) {
-                            ShowDialog("Sukses!", "Job Di Terima");
-                        } else {
-                            ShowDialog("Error!", "Gagal Menerima Job, Error: EJD04");
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<Order> call, Throwable t) {
-                        ShowDialog("Error!", "Gagal Menerima Job,Error: EJD05");
-                    }
-                });
-            }
-        });
-        Button bPanggil = (Button) findViewById(R.id.bPanggil);
-        bPanggil.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent callIntent = new Intent(Intent.ACTION_DIAL);
-                callIntent.setData(Uri.parse("tel:" + telp.getText()));
-                startActivity(callIntent);
-            }
-        });
-
-
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapJob);
-        mapFragment.getMapAsync(this);
-
     }
+
     public void ShowDialog(String title, String message){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)

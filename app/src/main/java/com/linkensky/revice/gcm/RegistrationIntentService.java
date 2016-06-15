@@ -90,7 +90,7 @@ public class RegistrationIntentService extends IntentService {
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
-        ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class, sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""));
+        ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class, sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""), this);
         Call<User> tokenCall = reviceApi.setToken(token);
         tokenCall.enqueue(new Callback<User>() {
             @Override

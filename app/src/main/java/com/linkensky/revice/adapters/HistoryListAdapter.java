@@ -34,8 +34,11 @@ public class HistoryListAdapter extends RecyclerView.Adapter<HistoryListAdapter.
     public void onBindViewHolder(ViewHolder holder, int position) {
         final OrderModel orderModel = realmResults.get(position);
         Integer status = orderModel.getStatus();
-        if(status == 0){
+        if(status == 0) {
             holder.serviceName.setText("Menunggu...");
+        }else if(status == 2){
+            holder.serviceName.setText("Dibatalkan...");
+
         }else{
             holder.serviceName.setText(orderModel.getServiceName());
         }

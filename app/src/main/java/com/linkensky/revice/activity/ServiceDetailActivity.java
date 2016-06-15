@@ -19,6 +19,8 @@ public class ServiceDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_service_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
         ServiceParcelable serviceParcelable = getIntent().getParcelableExtra("service");
         TextView nama = (TextView) findViewById(R.id.tvNama);

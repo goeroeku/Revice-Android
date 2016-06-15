@@ -171,9 +171,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback, Google
 
         if(mMap == null) return;
         //Load Marker
-        double dist = sharedPreferences.getFloat(RevicePreferences.OPTION_DISTANCE, 10.0f);
-        int max = sharedPreferences.getInt(RevicePreferences.OPTION_MAXITEM, 10);
-        ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class);
+        double dist = Double.parseDouble(sharedPreferences.getString(RevicePreferences.OPTION_DISTANCE, "10.0"));
+        int max = Integer.parseInt(sharedPreferences.getString(RevicePreferences.OPTION_MAXITEM, "10"));
+        ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class, getContext());
         Call<ClosestServices> closestServicesCall = reviceApi.closestService(
                 currentLocation.getLatitude(),
                 currentLocation.getLongitude(),

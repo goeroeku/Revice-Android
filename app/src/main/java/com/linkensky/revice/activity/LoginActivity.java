@@ -60,6 +60,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         // Set up the login form.
         mEmailView = (EditText) findViewById(R.id.email);
 
@@ -144,7 +146,7 @@ public class LoginActivity extends AppCompatActivity {
             // perform the user login attempt.
             showProgress(true);
 
-            ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class);
+            ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class, this);
             Call<Auth> authCall = reviceApi.authUser(new Credentials(email, password));
 
             authCall.enqueue(new Callback<Auth>() {
@@ -154,7 +156,7 @@ public class LoginActivity extends AppCompatActivity {
                         //Set shared pref and get current user info
                         sharedPreferences.edit().putBoolean(RevicePreferences.IS_LOGGED_IN, true).apply();
                         sharedPreferences.edit().putString(RevicePreferences.AUTH_TOKEN, response.body().getToken()).apply();
-                        ReviceApi reviceApiAuth = ServiceGenerator.createService(ReviceApi.class, response.body().getToken());
+                        ReviceApi reviceApiAuth = ServiceGenerator.createService(ReviceApi.class, response.body().getToken(), LoginActivity.this);
                         Call<User> userCall = reviceApiAuth.getCurrentUser();
                         userCall.enqueue(new Callback<User>() {
                             @Override

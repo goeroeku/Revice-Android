@@ -33,6 +33,8 @@ public class JobsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_jobs);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
         realm = Realm.getInstance(this);
 

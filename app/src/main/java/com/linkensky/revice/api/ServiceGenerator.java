@@ -1,11 +1,15 @@
 package com.linkensky.revice.api;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -21,16 +25,19 @@ public class ServiceGenerator {
 
     private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-    private static Retrofit.Builder builder =
-            new Retrofit.Builder()
-                    .baseUrl(API_BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create());
+    private static Retrofit.Builder builder;
 
-    public static <S> S createService(Class<S> serviceClass) {
-        return createService(serviceClass, null);
+    public static <S> S createService(Class<S> serviceClass, Context context) {
+        return createService(serviceClass, null, context);
     }
 
-    public static <S> S createService(Class<S> serviceClass, final String authToken) {
+    public static <S> S createService(Class<S> serviceClass, final String authToken, Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        builder =
+                new Retrofit.Builder()
+                        .baseUrl(sharedPreferences.getString("optServerHost", API_BASE_URL))
+                        .addConverterFactory(GsonConverterFactory.create());
+
             httpClient.addInterceptor(new Interceptor() {
                 @Override
                 public Response intercept(Chain chain) throws IOException {
@@ -40,7 +47,7 @@ public class ServiceGenerator {
                     Request.Builder requestBuilder = original.newBuilder()
                             .method(original.method(), original.body());
 
-                    if(authToken != null){
+                    if (authToken != null) {
                         requestBuilder.addHeader("Authorization", "bearer " + authToken);
                     }
 
@@ -52,6 +59,8 @@ public class ServiceGenerator {
         // Debugging Purpose
         httpClient.addNetworkInterceptor(new StethoInterceptor());
 
+        httpClient.connectTimeout(60, TimeUnit.SECONDS);
+        httpClient.readTimeout(60, TimeUnit.SECONDS);
         OkHttpClient client = httpClient.build();
         Retrofit retrofit = builder.client(client).build();
         return retrofit.create(serviceClass);

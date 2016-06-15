@@ -21,6 +21,8 @@ public class UserDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
         Realm realm = Realm.getInstance(this);
         CurrentUserModel currentUser = realm.where(CurrentUserModel.class).findFirst();

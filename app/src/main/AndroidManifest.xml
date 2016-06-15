@@ -92,8 +92,8 @@
         </activity>
         <activity
             android:name=".activity.RegisterActivity"
-            android:label="@string/title_activity_register"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.LoginActivity"
+            android:label="@string/title_activity_register">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.LoginActivity" />
@@ -101,7 +101,8 @@
         <activity
             android:name=".activity.NotificationActivity"
             android:label="@string/title_activity_notification"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.MainActivity" />
@@ -109,7 +110,8 @@
         <activity
             android:name=".activity.ServiceDetailActivity"
             android:label="@string/title_activity_service_detail"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.MainActivity" />
@@ -117,7 +119,8 @@
         <activity
             android:name=".activity.UserDetailActivity"
             android:label="@string/title_activity_user_detail"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.MainActivity" />
@@ -125,7 +128,8 @@
         <activity
             android:name=".activity.JobsActivity"
             android:label="@string/title_activity_jobs"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.MainActivity" />
@@ -133,7 +137,8 @@
         <activity
             android:name=".activity.JobDetailActivity"
             android:label="@string/title_activity_job_detail"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.JobsActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.JobsActivity" />
@@ -141,7 +146,8 @@
         <activity
             android:name=".activity.OrderDetailActivity"
             android:label="@string/title_activity_order_detail"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.MainActivity" />
@@ -149,8 +155,7 @@
         <activity
             android:name=".activity.OptionsActivity"
             android:label="@string/title_activity_options"
-            android:parentActivityName=".activity.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:parentActivityName=".activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.linkensky.revice.activity.MainActivity" />

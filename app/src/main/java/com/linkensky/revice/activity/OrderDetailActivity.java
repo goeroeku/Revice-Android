@@ -1,5 +1,6 @@
 package com.linkensky.revice.activity;
 
+import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -37,6 +38,14 @@ public class OrderDetailActivity extends AppCompatActivity implements OnMapReady
     private GoogleMap mMap;
     private OrderModel order;
     private SharedPreferences sharedPreferences;
+    private ProgressDialog progressDialog;
+    private TextView id;
+    private TextView lokasi;
+    private TextView masalah;
+    private TextView tipe;
+    private TextView status;
+    private Realm realm;
+    private String orderId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,30 +53,43 @@ public class OrderDetailActivity extends AppCompatActivity implements OnMapReady
         setContentView(R.layout.activity_order_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         //get order data
-        String orderId = getIntent().getStringExtra("orderId");
-        Realm realm = Realm.getInstance(this);
-        order = realm.where(OrderModel.class).equalTo("id", orderId).findFirst();
+        orderId = getIntent().getStringExtra("orderId");
+        realm = Realm.getInstance(this);
 
-        final TextView id = (TextView) findViewById(R.id.tvIdPesan);
-        TextView lokasi = (TextView) findViewById(R.id.tvDetailLokasi);
-        TextView masalah = (TextView) findViewById(R.id.tvDetailMasalah);
-        TextView tipe = (TextView) findViewById(R.id.tvTipe);
-        TextView status = (TextView) findViewById(R.id.tvNotifDesc);
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+
+
+        id = (TextView) findViewById(R.id.tvIdPesan);
+        lokasi = (TextView) findViewById(R.id.tvDetailLokasi);
+        masalah = (TextView) findViewById(R.id.tvDetailMasalah);
+        tipe = (TextView) findViewById(R.id.tvTipe);
+        status = (TextView) findViewById(R.id.tvNotifDesc);
         Button bBatal = (Button) findViewById(R.id.bBatal);
+
+
+        LoadData();
+
         bBatal.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                progressDialog.setMessage("Mengubah status!");
+                progressDialog.show();
                 final ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class,
-                        sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""));
-                Call<Order> orderCall1 = reviceApi.editStatus(id.getText().toString(),new StatusRequest(2, ""));
+                        sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""), OrderDetailActivity.this);
+                Call<Order> orderCall1 = reviceApi.editStatus(id.getText().toString(), new StatusRequest(2, ""));
                 orderCall1.enqueue(new Callback<Order>() {
                     @Override
                     public void onResponse(Call<Order> call, Response<Order> response) {
+                        progressDialog.dismiss();
                         if (response.isSuccess()) {
                             ShowDialog("Sukses!", "Status Di Ubah");
+                            LoadData();
                         } else {
                             ShowDialog("Error!", "Gagal Mengubah Status, EOD02");
                         }
@@ -75,13 +97,24 @@ public class OrderDetailActivity extends AppCompatActivity implements OnMapReady
 
                     @Override
                     public void onFailure(Call<Order> call, Throwable t) {
+                        progressDialog.dismiss();
                         ShowDialog("Error!", "Gagal Mengubah Status, EOD03");
 
                     }
                 });
             }
         });
+        pos = new LatLng(Double.parseDouble(order.getLat()), Double.parseDouble(order.getLng()));
 
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapOrder);
+        mapFragment.getMapAsync(this);
+
+    }
+
+    private void LoadData() {
+        order = realm.where(OrderModel.class).equalTo("id", orderId).findFirst();
         id.setText(order.getId());
         lokasi.setText(order.getLocation());
         masalah.setText(order.getDesc());
@@ -100,15 +133,8 @@ public class OrderDetailActivity extends AppCompatActivity implements OnMapReady
         }
 
         status.setText(statusText);
-
-        pos = new LatLng(Double.parseDouble(order.getLat()), Double.parseDouble(order.getLng()));
-
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapOrder);
-        mapFragment.getMapAsync(this);
-
     }
+
     public void ShowDialog(String title, String message){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)

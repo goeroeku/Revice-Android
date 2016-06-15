@@ -127,10 +127,10 @@ public class OrderFragment extends Fragment {
 
                 showProgress(true);
                 ReviceApi reviceApi = ServiceGenerator.createService(ReviceApi.class,
-                        sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""));
+                        sharedPreferences.getString(RevicePreferences.AUTH_TOKEN, ""), getContext());
 
-                double dist = sharedPreferences.getFloat(RevicePreferences.OPTION_DISTANCE, 10.0f);
-                int max = sharedPreferences.getInt(RevicePreferences.OPTION_MAXITEM, 10);
+                double dist = Double.parseDouble(sharedPreferences.getString(RevicePreferences.OPTION_DISTANCE, "10.0"));
+                int max = Integer.parseInt(sharedPreferences.getString(RevicePreferences.OPTION_MAXITEM, "10"));
 
                 //Get type
                 int selectedId = typeMasalah.getCheckedRadioButtonId();
